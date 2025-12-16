@@ -1,0 +1,8 @@
+title: Make Infrastructure Boring Again
+description: Calm systems scale. Exciting ones fail.
+markdown: kramdown
+theme: null
+exclude:
+  - README.md
+  - AGENTS.md
+
