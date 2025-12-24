@@ -66,7 +66,9 @@
       top: 0;
       left: 0;
       width: 115vw;
-      height: 100vh;
+      height: 100%;
+      min-height: 100vh;
+      min-height: 100dvh;
       font-family: var(--font-mono);
       font-size: 0.775rem;
       line-height: 2.3;
@@ -1209,7 +1211,7 @@ var chaosItems = [
       var containerHeight = window.innerHeight;
 
       var phrasesPerRow = Math.floor(containerWidth / phraseWidth);
-      var rows = Math.floor(containerHeight / lineHeight) - 1; // leave room at bottom
+      var rows = Math.ceil(containerHeight / lineHeight) + 3; // extra rows for mobile
       var wordCount = phrasesPerRow * rows;
 
       // Shuffle the original list
