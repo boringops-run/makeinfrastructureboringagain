@@ -235,6 +235,64 @@
       text-shadow: 0 0 6px rgba(239, 68, 68, 0.5) !important;
     }
 
+    /* ===== ORDERED CHAOS LIST ===== */
+    .ordered-chaos {
+      position: fixed;
+      top: 1.5rem;
+      left: 1.5rem;
+      max-width: 280px;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+      z-index: 5;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .ordered-chaos.visible {
+      opacity: 1;
+    }
+
+    .ordered-chaos-title {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: rgba(255, 255, 255, 0.4);
+      margin-bottom: 0.75rem;
+    }
+
+    .ordered-chaos-item {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      line-height: 1.6;
+      color: rgba(239, 68, 68, 0.7);
+      white-space: nowrap;
+    }
+
+    .chaos-word.flying {
+      position: fixed !important;
+      z-index: 100;
+      transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      pointer-events: none;
+    }
+
+    .ordered-chaos-item .number {
+      color: rgba(255, 255, 255, 0.3);
+      margin-right: 0.5em;
+    }
+
+    @media (max-width: 600px) {
+      .ordered-chaos {
+        top: 1rem;
+        left: 1rem;
+        max-width: 160px;
+      }
+
+      .ordered-chaos-item {
+        font-size: 0.55rem;
+      }
+    }
+
     /* ===== MAIN CONTENT OVERLAY ===== */
     .main-panel {
       position: fixed;
@@ -250,6 +308,11 @@
       padding: 2rem;
     }
 
+    .card-wrapper {
+      display: flex;
+      align-items: stretch;
+    }
+
     .panel-box {
       background: rgba(0, 0, 0, 0.88);
       border: 1px solid rgba(255, 255, 255, 0.1);
@@ -261,7 +324,7 @@
       flex-direction: column;
       justify-content: center;
       min-height: 400px;
-      transition: border-color 0.3s ease, box-shadow 0.3s ease, border-radius 0.3s ease;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
     }
 
     .metrics-sidebar.hidden + .panel-box {
@@ -358,12 +421,6 @@
       display: block;
     }
 
-    /* ===== CARD WRAPPER ===== */
-    .card-wrapper {
-      display: flex;
-      align-items: stretch;
-    }
-
     /* ===== METRICS SIDEBAR ===== */
     .metrics-sidebar {
       width: 80px;
@@ -390,6 +447,23 @@
       margin-bottom: 1rem;
       padding-bottom: 0.75rem;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .month-indicator {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--fg-muted);
+      letter-spacing: 0.1em;
+      transition: color 0.3s ease;
+    }
+
+    .month-indicator.pulse {
+      animation: month-pulse 0.6s ease-out forwards;
+    }
+
+    @keyframes month-pulse {
+      0% { color: var(--fg); }
+      100% { color: var(--fg-muted); }
     }
 
     .metrics-section {
@@ -424,6 +498,14 @@
       transition: color 0.5s ease, transform 0.3s ease;
     }
 
+    .metric-label {
+      font-size: 0.45rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--fg-muted);
+      line-height: 1.2;
+    }
+
     .metric-value.bad {
       color: var(--red);
     }
@@ -455,29 +537,14 @@
       100% { transform: scale(1); }
     }
 
-    .metric-label {
-      font-size: 0.45rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--fg-muted);
-      line-height: 1.2;
+    .metric.demoted .metric-value {
+      font-size: 0.77rem;
+      opacity: 0.65;
+      animation: none !important;
     }
 
-    .month-indicator {
-      font-family: var(--font-mono);
-      font-size: 0.65rem;
-      color: var(--fg-muted);
-      letter-spacing: 0.1em;
-      transition: color 0.3s ease;
-    }
-
-    .month-indicator.pulse {
-      animation: month-pulse 0.6s ease-out forwards;
-    }
-
-    @keyframes month-pulse {
-      0% { color: var(--fg); }
-      100% { color: var(--fg-muted); }
+    .metric.demoted .metric-label {
+      opacity: 0.65;
     }
 
     /* ===== PHASE CONTENT ===== */
@@ -564,12 +631,14 @@
     }
 
     .cta-btn {
+      display: inline-block;
       padding: 0.8rem 1.5rem;
       font-size: 0.9rem;
       font-weight: 600;
       font-family: var(--font-primary);
       background: var(--accent);
       color: #000;
+      text-decoration: none;
       border: none;
       border-radius: 3px;
       cursor: pointer;
@@ -581,10 +650,11 @@
       transform: translateY(-1px);
     }
 
-    .privacy {
-      font-size: 0.65rem;
+    .contact-email {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
       color: var(--fg-muted);
-      margin: 0;
+      margin-top: 0.5rem;
     }
 
     /* ===== FINAL CARD STYLING ===== */
@@ -684,6 +754,12 @@
   <!-- Chaos background (hidden initially) -->
   <div class="chaos-grid" id="chaos-grid"></div>
 
+  <!-- Ordered chaos list (appears after stewardship) -->
+  <div class="ordered-chaos" id="ordered-chaos">
+    <div class="ordered-chaos-title">Tolerated Chaos</div>
+    <div class="ordered-chaos-list" id="ordered-chaos-list"></div>
+  </div>
+
   <!-- Main content panel -->
   <div class="main-panel">
     <div class="card-wrapper">
@@ -692,7 +768,7 @@
         <div class="month-indicator" id="month-indicator">Jan</div>
         <div class="metrics-section">
           <div class="metrics-section-label">Effort</div>
-          <div class="metric">
+          <div class="metric demoted">
             <div class="metric-value warn" id="m-hours">52h</div>
             <div class="metric-label">Avg Week</div>
           </div>
@@ -715,7 +791,7 @@
             <div class="metric-value bad" id="m-shipped">2</div>
             <div class="metric-label">Shipped/Q</div>
           </div>
-          <div class="metric">
+          <div class="metric demoted">
             <div class="metric-value warn" id="m-deploy">4.2d</div>
             <div class="metric-label">Deploy Time</div>
           </div>
@@ -726,7 +802,7 @@
             <div class="metric-value bad" id="m-incidents">47</div>
             <div class="metric-label">Incidents/mo</div>
           </div>
-          <div class="metric">
+          <div class="metric demoted">
             <div class="metric-value bad" id="m-burnout">High</div>
             <div class="metric-label">Burnout</div>
           </div>
@@ -851,11 +927,10 @@
           what operational chaos they will eliminate and what they will continue to tolerate.
         </p>
 
-        <form class="final-cta" id="signup-form">
-          <input type="email" id="email" placeholder="your@email.com" required>
-          <button type="submit" class="cta-btn">Start a Conversation</button>
-          <p class="privacy">No spam. Just clarity.</p>
-        </form>
+        <div class="final-cta">
+          <a href="mailto:hello@boringops.run?subject=From%20makeinfrastructureboringagain" class="cta-btn">Start a Conversation</a>
+          <p class="contact-email">hello@boringops.run</p>
+        </div>
 
         <div class="footer-links">
           <a href="https://boringops.run"><span class="footer-label">consulting</span> boringops.run</a>
@@ -864,6 +939,7 @@
         </div>
       </div>
 
+    </div>
     </div>
   </div>
 
@@ -1442,6 +1518,11 @@ var chaosItems = [
               // Force reflow then restore transitions
               void sidebar.offsetWidth;
               sidebar.style.transition = '';
+
+              // After a moment, animate kept items to ordered list
+              setTimeout(function() {
+                organizeKeptChaos();
+              }, 800);
             }, 500);
           }
         }
@@ -1449,15 +1530,80 @@ var chaosItems = [
         setTimeout(removeBatch, 300);
       });
 
-      // Form handler
-      var form = document.getElementById('signup-form');
-      form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        var email = document.getElementById('email').value;
-        if (email) {
-          window.location.href = 'mailto:hello@boringops.run?subject=From%20makeinfrastructureboringagain&body=Email:%20' + encodeURIComponent(email);
-        }
-      });
+      // Organize kept chaos into numbered list
+      function organizeKeptChaos() {
+        var orderedChaos = document.getElementById('ordered-chaos');
+        var orderedList = document.getElementById('ordered-chaos-list');
+
+        // Get unique kept items (dedupe by text)
+        var uniqueKept = [];
+        var seenTexts = {};
+        tolerableWords.forEach(function(el) {
+          var text = el.textContent.replace(/·$/, '').trim();
+          if (!seenTexts[text]) {
+            seenTexts[text] = true;
+            uniqueKept.push({ el: el, text: text });
+          } else {
+            // Hide duplicate
+            el.style.opacity = '0';
+          }
+        });
+
+        // Show the container
+        orderedChaos.classList.add('visible');
+
+        // Create placeholder slots in the list first
+        var slots = [];
+        uniqueKept.forEach(function(item, idx) {
+          var slot = document.createElement('div');
+          slot.className = 'ordered-chaos-item';
+          slot.innerHTML = '<span class="number">' + (idx + 1) + '.</span><span class="item-text"></span>';
+          slot.style.opacity = '0';
+          orderedList.appendChild(slot);
+          slots.push(slot);
+        });
+
+        // Animate each item to its slot
+        uniqueKept.forEach(function(item, idx) {
+          setTimeout(function() {
+            var el = item.el;
+            var slot = slots[idx];
+            var textSpan = slot.querySelector('.item-text');
+
+            // Get current position
+            var startRect = el.getBoundingClientRect();
+
+            // Get target position (the slot)
+            var endRect = slot.getBoundingClientRect();
+
+            // Set starting position as fixed
+            el.style.position = 'fixed';
+            el.style.left = startRect.left + 'px';
+            el.style.top = startRect.top + 'px';
+            el.style.width = 'auto';
+            el.style.margin = '0';
+            el.classList.remove('kept', 'tolerable', 'typed');
+            el.classList.add('flying');
+
+            // Force reflow
+            void el.offsetWidth;
+
+            // Animate to target (left side)
+            el.style.left = endRect.left + 'px';
+            el.style.top = endRect.top + 'px';
+            el.style.fontSize = '0.7rem';
+            el.style.color = 'rgba(239, 68, 68, 0.7)';
+            el.style.textShadow = 'none';
+
+            // After animation, transfer to list
+            setTimeout(function() {
+              textSpan.textContent = item.text;
+              slot.style.opacity = '1';
+              el.style.display = 'none';
+            }, 800);
+          }, idx * 120);
+        });
+      }
 
     })();
   </script>
