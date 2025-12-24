@@ -253,12 +253,52 @@
     .panel-box {
       background: rgba(0, 0, 0, 0.88);
       border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 6px;
+      border-radius: 0 6px 6px 0;
       padding: 2rem 2.5rem;
-      max-width: 520px;
-      width: 100%;
+      width: 520px;
       text-align: center;
-      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 400px;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease, border-radius 0.3s ease;
+    }
+
+    .metrics-sidebar.hidden + .panel-box {
+      border-radius: 6px;
+    }
+
+    @media (max-width: 700px) {
+      .metrics-sidebar {
+        display: none;
+      }
+
+      .panel-box {
+        width: 100%;
+        max-width: 400px;
+        border-radius: 6px;
+        min-height: 350px;
+        padding: 1.5rem;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .main-panel {
+        padding: 1rem;
+      }
+
+      .panel-box {
+        padding: 1.25rem;
+        min-height: 300px;
+      }
+
+      .phase-headline {
+        font-size: 1.2rem;
+      }
+
+      .phase-desc {
+        font-size: 0.85rem;
+      }
     }
 
     /* Card states */
@@ -318,27 +358,69 @@
       display: block;
     }
 
-    /* ===== METRICS ===== */
-    .metrics {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1rem 0.75rem;
-      margin-bottom: 1.5rem;
-      padding-bottom: 1.5rem;
+    /* ===== CARD WRAPPER ===== */
+    .card-wrapper {
+      display: flex;
+      align-items: stretch;
+    }
+
+    /* ===== METRICS SIDEBAR ===== */
+    .metrics-sidebar {
+      width: 80px;
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-right: none;
+      border-radius: 6px 0 0 6px;
+      padding: 1rem 0.6rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      transition: opacity 0.5s ease, width 0.3s ease, padding 0.3s ease;
+    }
+
+    .metrics-sidebar.hidden {
+      opacity: 0;
+      width: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .metrics-sidebar .month-indicator {
+      text-align: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .metrics-section {
+      margin-bottom: 1.25rem;
+      transition: opacity 0.5s ease;
+    }
+
+    .metrics-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .metrics-section-label {
+      font-size: 0.45rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: rgba(255, 255, 255, 0.3);
+      margin-bottom: 0.5rem;
+      text-align: center;
     }
 
     .metric {
       text-align: center;
-      padding: 0.5rem 0.25rem;
+      padding: 0.35rem 0;
     }
 
     .metric-value {
       font-family: var(--font-mono);
-      font-size: 1.1rem;
+      font-size: 0.9rem;
       font-weight: 700;
       line-height: 1;
-      margin-bottom: 0.3rem;
+      margin-bottom: 0.15rem;
       transition: color 0.5s ease, transform 0.3s ease;
     }
 
@@ -374,47 +456,19 @@
     }
 
     .metric-label {
-      font-size: 0.55rem;
+      font-size: 0.45rem;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.05em;
       color: var(--fg-muted);
-      line-height: 1.3;
-    }
-
-    .metrics-section {
-      margin-bottom: 1.25rem;
-      transition: opacity 0.5s ease, max-height 0.5s ease;
-    }
-
-    .metrics-section.hidden {
-      opacity: 0;
-      max-height: 0;
-      overflow: hidden;
-      margin-bottom: 0;
-    }
-
-    .metrics-section-label {
-      font-size: 0.5rem;
-      text-transform: uppercase;
-      letter-spacing: 0.15em;
-      color: rgba(255, 255, 255, 0.25);
-      margin-bottom: 0.5rem;
-      text-align: left;
+      line-height: 1.2;
     }
 
     .month-indicator {
       font-family: var(--font-mono);
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       color: var(--fg-muted);
-      margin-bottom: 1.25rem;
-      padding-bottom: 0.75rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
       letter-spacing: 0.1em;
-      transition: opacity 0.5s ease, color 0.3s ease;
-    }
-
-    .month-indicator.hidden {
-      opacity: 0;
+      transition: color 0.3s ease;
     }
 
     .month-indicator.pulse {
@@ -488,19 +542,7 @@
     }
 
     /* ===== FINAL CTA ===== */
-    .final-cta {
-      margin-top: 1.5rem;
-    }
-
-    .cta-row {
-      display: flex;
-      gap: 0.75rem;
-      justify-content: center;
-      margin-bottom: 0.75rem;
-    }
-
     input[type="email"] {
-      width: 200px;
       padding: 0.8rem 1rem;
       font-size: 0.9rem;
       font-family: var(--font-primary);
@@ -509,7 +551,7 @@
       border-radius: 3px;
       color: var(--fg);
       outline: none;
-      transition: border-color 150ms ease;
+      transition: border-color 150ms ease, box-shadow 150ms ease;
     }
 
     input[type="email"]::placeholder {
@@ -518,11 +560,12 @@
 
     input[type="email"]:focus {
       border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.15);
     }
 
     .cta-btn {
-      padding: 0.8rem 1.25rem;
-      font-size: 0.85rem;
+      padding: 0.8rem 1.5rem;
+      font-size: 0.9rem;
       font-weight: 600;
       font-family: var(--font-primary);
       background: var(--accent);
@@ -530,33 +573,70 @@
       border: none;
       border-radius: 3px;
       cursor: pointer;
-      transition: background 150ms ease;
-      white-space: nowrap;
+      transition: background 150ms ease, transform 150ms ease;
     }
 
     .cta-btn:hover {
-      background: rgba(249, 115, 22, 0.88);
+      background: #fb923c;
+      transform: translateY(-1px);
     }
 
     .privacy {
       font-size: 0.65rem;
       color: var(--fg-muted);
+      margin: 0;
     }
 
-    .footer {
-      margin-top: 2rem;
+    /* ===== FINAL CARD STYLING ===== */
+    .final-cta {
+      margin: 1.5rem 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
     }
 
-    .footer a {
-      font-size: 0.8rem;
+    .final-cta input[type="email"] {
+      width: 100%;
+      max-width: 280px;
+    }
+
+    .final-cta .cta-btn {
+      width: 100%;
+      max-width: 280px;
+    }
+
+    .footer-links {
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .footer-links a {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
       color: var(--accent);
       text-decoration: none;
       opacity: 0.7;
       transition: opacity 150ms ease;
     }
 
-    .footer a:hover {
+    .footer-links a:hover {
       opacity: 1;
+    }
+
+    .footer-divider {
+      color: rgba(255, 255, 255, 0.2);
+      font-size: 0.75rem;
+    }
+
+    .footer-label {
+      color: rgba(255, 255, 255, 0.4);
+      margin-right: 0.3em;
     }
 
     /* ===== PROCESSING INDICATOR ===== */
@@ -590,28 +670,6 @@
     }
 
     @media (max-width: 550px) {
-      .panel-box {
-        padding: 2rem 1.5rem;
-      }
-
-      .metrics {
-        gap: 1rem;
-      }
-
-      .metric-value {
-        font-size: 1.5rem;
-      }
-
-      .cta-row {
-        flex-direction: column;
-        align-items: center;
-      }
-
-      input[type="email"], .cta-btn {
-        width: 100%;
-        max-width: 250px;
-      }
-
       .chaos-grid {
         font-size: 0.6rem;
         line-height: 2;
@@ -628,15 +686,12 @@
 
   <!-- Main content panel -->
   <div class="main-panel">
-    <div class="panel-box" id="panel-box">
-
-      <!-- Month indicator -->
-      <div class="month-indicator" id="month-indicator">Jan</div>
-
-      <!-- Metrics -->
-      <div class="metrics-section">
-        <div class="metrics-section-label">Effort</div>
-        <div class="metrics">
+    <div class="card-wrapper">
+      <!-- Metrics sidebar attached to card -->
+      <div class="metrics-sidebar" id="metrics-sidebar">
+        <div class="month-indicator" id="month-indicator">Jan</div>
+        <div class="metrics-section">
+          <div class="metrics-section-label">Effort</div>
           <div class="metric">
             <div class="metric-value warn" id="m-hours">52h</div>
             <div class="metric-label">Avg Week</div>
@@ -650,11 +705,8 @@
             <div class="metric-label">Unplanned</div>
           </div>
         </div>
-      </div>
-
-      <div class="metrics-section">
-        <div class="metrics-section-label">Output</div>
-        <div class="metrics">
+        <div class="metrics-section">
+          <div class="metrics-section-label">Output</div>
           <div class="metric">
             <div class="metric-value bad" id="m-velocity">23%</div>
             <div class="metric-label">Velocity</div>
@@ -668,11 +720,8 @@
             <div class="metric-label">Deploy Time</div>
           </div>
         </div>
-      </div>
-
-      <div class="metrics-section" style="margin-bottom: 0; padding-bottom: 0;">
-        <div class="metrics-section-label">Health</div>
-        <div class="metrics" style="border-bottom: none; padding-bottom: 0; margin-bottom: 1rem;">
+        <div class="metrics-section">
+          <div class="metrics-section-label">Health</div>
           <div class="metric">
             <div class="metric-value bad" id="m-incidents">47</div>
             <div class="metric-label">Incidents/mo</div>
@@ -687,6 +736,8 @@
           </div>
         </div>
       </div>
+
+      <div class="panel-box" id="panel-box">
 
       <!-- Phase 0: Initial state -->
       <div class="phase-content active" id="phase-0">
@@ -763,7 +814,7 @@
             What you see here is the difference between chaos that is consciously accepted
             and chaos that will no longer be allowed to consume capacity.
           </p>
-          <button class="action-btn" id="btn-stewardship">Enforce Stewardship</button>
+          <button class="action-btn" id="btn-stewardship">Begin Stewardship</button>
         </div>
         <div class="phase-state state-running">
           <div class="phase-title">Stewardship</div>
@@ -785,45 +836,33 @@
 
 
       <!-- Phase 3: Final state -->
-      <div class="phase-content" id="phase-3">
+      <div class="phase-content phase-final" id="phase-3">
         <div class="phase-title">Stewardship Active</div>
         <h2 class="phase-headline">Capacity returns when tolerance ends.</h2>
         <p class="phase-desc">
-          When chaos is named, bounded, and owned, teams stop compensating.<br>
+          When chaos is named and owned, teams stop compensating.<br>
           Work becomes predictable.<br>
           Shipping resumes without heroics.
         </p>
 
-        <p class="phase-desc" style="margin-top:1rem;">
+        <p class="phase-desc" style="margin-top: 1.5rem;">
           <strong>This is BoringOps.</strong><br><br>
-          We do not sell tools.<br>
-          We do not provide roadmaps.<br><br>
           We run structured engagements that force organizations to decide
           what operational chaos they will eliminate and what they will continue to tolerate.
         </p>
 
         <form class="final-cta" id="signup-form">
-          <div class="cta-row">
-            <input type="email" id="email" placeholder="your@email.com" required>
-            <button type="submit" class="cta-btn">Start a Conversation</button>
-          </div>
+          <input type="email" id="email" placeholder="your@email.com" required>
+          <button type="submit" class="cta-btn">Start a Conversation</button>
           <p class="privacy">No spam. Just clarity.</p>
         </form>
 
-        <div class="footer">
-          <p>
-            <a href="https://boringops.run">
-              boringops.run — Run a Chaos Assessment or Tolerance Decision. This is the engagement.
-            </a>
-          </p>
-          <p>
-            <a href="https://boringops.sh">
-              boringops.sh — The methodology, language, and operating principles behind BoringOps.
-            </a>
-          </p>
+        <div class="footer-links">
+          <a href="https://boringops.run"><span class="footer-label">consulting</span> boringops.run</a>
+          <span class="footer-divider">·</span>
+          <a href="https://boringops.sh"><span class="footer-label">philosophy</span> boringops.sh</a>
         </div>
       </div>
-
 
     </div>
   </div>
@@ -1176,11 +1215,8 @@ var chaosItems = [
         this.textContent = 'Revealing...';
         setCardState('running');
 
-        // Hide metrics during assessment
-        document.getElementById('month-indicator').classList.add('hidden');
-        document.querySelectorAll('.metrics-section').forEach(function(el) {
-          el.classList.add('hidden');
-        });
+        // Hide metrics sidebar during assessment
+        document.getElementById('metrics-sidebar').classList.add('hidden');
 
         // Show chaos grid (stays grey until tolerance decision)
         grid.classList.add('visible');
@@ -1395,28 +1431,17 @@ var chaosItems = [
               document.getElementById('month-indicator').textContent = 'Now';
 
               // Disable transitions, reveal everything, then re-enable
-              var monthEl = document.getElementById('month-indicator');
-              var metricSections = document.querySelectorAll('.metrics-section');
-
-              monthEl.style.transition = 'none';
-              metricSections.forEach(function(el) {
-                el.style.transition = 'none';
-              });
+              var sidebar = document.getElementById('metrics-sidebar');
+              sidebar.style.transition = 'none';
 
               // Now reveal everything at once
               showPhase(3);
               setCardState('final');
-              monthEl.classList.remove('hidden');
-              metricSections.forEach(function(el) {
-                el.classList.remove('hidden');
-              });
+              sidebar.classList.remove('hidden');
 
               // Force reflow then restore transitions
-              void monthEl.offsetWidth;
-              monthEl.style.transition = '';
-              metricSections.forEach(function(el) {
-                el.style.transition = '';
-              });
+              void sidebar.offsetWidth;
+              sidebar.style.transition = '';
             }, 500);
           }
         }
