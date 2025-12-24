@@ -258,19 +258,64 @@
       max-width: 520px;
       width: 100%;
       text-align: center;
-      transition: border-color 0.3s ease;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
     }
 
-    .panel-box.chaos-visible {
-      border-color: rgba(239, 68, 68, 0.4);
+    /* Card states */
+    .panel-box.state-idle {
+      border-color: rgba(255, 255, 255, 0.1);
     }
 
-    .panel-box.decision-visible {
-      border-color: rgba(251, 191, 36, 0.4);
+    .panel-box.state-running {
+      border-color: rgba(249, 115, 22, 0.6);
+      box-shadow: 0 0 30px rgba(249, 115, 22, 0.15);
+      animation: card-pulse 2s ease-in-out infinite;
     }
 
-    .panel-box.stewardship-visible {
-      border-color: rgba(249, 115, 22, 0.4);
+    @keyframes card-pulse {
+      0%, 100% { box-shadow: 0 0 30px rgba(249, 115, 22, 0.15); }
+      50% { box-shadow: 0 0 40px rgba(249, 115, 22, 0.25); }
+    }
+
+    .panel-box.state-complete {
+      border-color: rgba(255, 255, 255, 0.3);
+      animation: card-complete 0.5s ease-out;
+    }
+
+    @keyframes card-complete {
+      0% { border-color: rgba(255, 255, 255, 0.6); box-shadow: 0 0 40px rgba(255, 255, 255, 0.2); }
+      100% { border-color: rgba(255, 255, 255, 0.3); box-shadow: none; }
+    }
+
+    .panel-box.state-ready {
+      border-color: rgba(249, 115, 22, 0.5);
+      box-shadow: 0 0 25px rgba(249, 115, 22, 0.1);
+    }
+
+    .panel-box.state-final {
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 0 40px rgba(255, 255, 255, 0.05);
+    }
+
+    /* Phase state visibility */
+    .phase-state {
+      display: none;
+    }
+
+    .phase-state.state-ready {
+      display: block;
+    }
+
+    .panel-box.state-running .phase-state.state-ready,
+    .panel-box.state-complete .phase-state.state-ready,
+    .panel-box.state-final .phase-state.state-ready {
+      display: none;
+    }
+
+    .panel-box.state-running .phase-state.state-running,
+    .panel-box.state-complete .phase-state.state-running,
+    .panel-box.state-final .phase-state.state-running {
+      display: block;
     }
 
     /* ===== METRICS ===== */
@@ -657,55 +702,140 @@
 
       <!-- Phase 0: Initial state -->
       <div class="phase-content active" id="phase-0">
-        <div class="phase-title">Current State</div>
-        <h2 class="phase-headline">Everyone is working hard. Nothing is getting done.</h2>
-        <p class="phase-desc">It's not one big thing. It's a thousand small ones. The business can't see them. Your engineers feel every single one.</p>
-        <button class="action-btn" id="btn-assessment">Apply Chaos Assessment</button>
+        <div class="phase-state state-ready">
+          <div class="phase-title">Current State</div>
+          <h2 class="phase-headline">Everyone is working hard. Nothing is getting done.</h2>
+          <p class="phase-desc">
+            This is not a talent problem.<br>
+            It's not a tooling problem.<br>
+            It's not a leadership problem in the way you think.<br><br>
+            It's accumulated operational chaos that no one has formally decided to stop paying for.
+          </p>
+          <button class="action-btn" id="btn-assessment">Reveal Operational Chaos</button>
+        </div>
+        <div class="phase-state state-running">
+          <div class="phase-title">Chaos Assessment</div>
+          <h2 class="phase-headline">Making hidden work explicit.</h2>
+          <p class="phase-desc">
+            This is not discovery.<br>
+            This is accumulation.<br><br>
+            Every workaround, exception, and compensating action your teams perform
+            to keep the system upright is being surfaced at once.
+          </p>
+          <p class="phase-desc" style="font-size:0.8rem;">
+            This is the part most organizations avoid.
+          </p>
+        </div>
+
         <div class="progress-bar" id="progress-assessment">
           <div class="progress-bar-fill" id="progress-assessment-fill"></div>
         </div>
       </div>
 
+
       <!-- Phase 1: After assessment -->
       <div class="phase-content" id="phase-1">
-        <div class="phase-title">Chaos Assessment Complete</div>
-        <h2 class="phase-headline">Now you see where capacity leaks.</h2>
-        <p class="phase-desc">The chaos was always there. Now it's visible. Each item consumes engineering hours.</p>
-        <button class="action-btn" id="btn-tolerance">Apply Chaos Tolerance Decision</button>
+        <div class="phase-state state-ready">
+          <div class="phase-title">Chaos Assessment Complete</div>
+          <h2 class="phase-headline">Now the hidden work is visible.</h2>
+          <p class="phase-desc">
+            Your engineers already knew this list.<br>
+            The business just never saw it in one place.<br><br>
+            The Chaos Assessment does not fix anything.
+            It establishes what is true, with evidence, and removes debate about why work feels hard.
+          </p>
+          <button class="action-btn" id="btn-tolerance">Force a Tolerance Decision</button>
+        </div>
+        <div class="phase-state state-running">
+          <div class="phase-title">Tolerance Decision</div>
+          <h2 class="phase-headline">Forcing explicit ownership.</h2>
+          <p class="phase-desc">
+            Each item is being judged once.<br>
+            Either it is consciously tolerated or it is not.<br><br>
+            Anything left undecided continues to drain capacity by default.
+          </p>
+          <p class="phase-desc" style="font-size:0.8rem;">
+            This is where most organizations stop.
+          </p>
+        </div>
         <div class="progress-bar" id="progress-tolerance">
           <div class="progress-bar-fill" id="progress-tolerance-fill"></div>
         </div>
       </div>
 
+
       <!-- Phase 2: After tolerance decision -->
       <div class="phase-content" id="phase-2">
-        <div class="phase-title">Tolerance Decision Complete</div>
-        <h2 class="phase-headline">Some chaos you fix. Some you accept.</h2>
-        <p class="phase-desc"><span id="tolerable-count">0</span> items tolerated. <span id="not-tolerable-count">0</span> items marked for elimination.</p>
-        <button class="action-btn" id="btn-stewardship">Apply Stewardship</button>
+        <div class="phase-state state-ready">
+          <div class="phase-title">Tolerance Decision Complete</div>
+          <h2 class="phase-headline">Chaos is either marked for removal or explicitly owned.</h2>
+          <p class="phase-desc">
+            Every organization tolerates some chaos.<br>
+            Most just pretend they don't.<br><br>
+            What you see here is the difference between chaos that is consciously accepted
+            and chaos that will no longer be allowed to consume capacity.
+          </p>
+          <button class="action-btn" id="btn-stewardship">Enforce Stewardship</button>
+        </div>
+        <div class="phase-state state-running">
+          <div class="phase-title">Stewardship</div>
+          <h2 class="phase-headline">Stopping compensatory behavior.</h2>
+          <p class="phase-desc">
+            The system no longer adapts around tolerated failure.<br>
+            It is allowed to simplify.<br><br>
+            Capacity returns when teams are no longer forced to be clever.
+          </p>
+          <p class="phase-desc" style="font-size:0.8rem;">
+            This is where boring begins.
+          </p>
+        </div>
+
         <div class="progress-bar" id="progress-stewardship">
           <div class="progress-bar-fill" id="progress-stewardship-fill"></div>
         </div>
       </div>
 
+
       <!-- Phase 3: Final state -->
       <div class="phase-content" id="phase-3">
         <div class="phase-title">Stewardship Active</div>
-        <h2 class="phase-headline">Capacity returns. The team ships.</h2>
-        <p class="phase-desc">The remaining chaos is acknowledged and owned. Everything else is gone.</p>
+        <h2 class="phase-headline">Capacity returns when tolerance ends.</h2>
+        <p class="phase-desc">
+          When chaos is named, bounded, and owned, teams stop compensating.<br>
+          Work becomes predictable.<br>
+          Shipping resumes without heroics.
+        </p>
+
+        <p class="phase-desc" style="margin-top:1rem;">
+          <strong>This is BoringOps.</strong><br><br>
+          We do not sell tools.<br>
+          We do not provide roadmaps.<br><br>
+          We run structured engagements that force organizations to decide
+          what operational chaos they will eliminate and what they will continue to tolerate.
+        </p>
 
         <form class="final-cta" id="signup-form">
           <div class="cta-row">
             <input type="email" id="email" placeholder="your@email.com" required>
-            <button type="submit" class="cta-btn">Start Here</button>
+            <button type="submit" class="cta-btn">Start a Conversation</button>
           </div>
           <p class="privacy">No spam. Just clarity.</p>
         </form>
 
         <div class="footer">
-          <a href="https://boringops.run">boringops.run</a>
+          <p>
+            <a href="https://boringops.run">
+              boringops.run — Run a Chaos Assessment or Tolerance Decision. This is the engagement.
+            </a>
+          </p>
+          <p>
+            <a href="https://boringops.sh">
+              boringops.sh — The methodology, language, and operating principles behind BoringOps.
+            </a>
+          </p>
         </div>
       </div>
+
 
     </div>
   </div>
@@ -954,6 +1084,19 @@ var chaosItems = [
       var tolerableWords = [];
       var notTolerableWords = [];
 
+      // Card state management
+      function setCardState(state) {
+        // Add new state first to prevent flash
+        if (state) panelBox.classList.add('state-' + state);
+        // Then remove others
+        ['state-idle', 'state-running', 'state-complete', 'state-ready', 'state-final'].forEach(function(cls) {
+          if (cls !== 'state-' + state) panelBox.classList.remove(cls);
+        });
+      }
+
+      // Start with ready state
+      setCardState('ready');
+
       // Calculate how many phrases fit on visible screen only
       var fontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) * 0.775;
       var avgCharWidth = fontSize * 0.6;
@@ -1045,7 +1188,8 @@ var chaosItems = [
       // Phase 0 -> 1: Chaos Assessment
       document.getElementById('btn-assessment').addEventListener('click', function() {
         this.disabled = true;
-        this.textContent = 'Assessing...';
+        this.textContent = 'Revealing...';
+        setCardState('running');
 
         // Hide metrics during assessment
         document.getElementById('month-indicator').classList.add('hidden');
@@ -1055,7 +1199,6 @@ var chaosItems = [
 
         // Show chaos grid (stays grey until tolerance decision)
         grid.classList.add('visible');
-        panelBox.classList.add('chaos-visible');
 
         // Type out each character like terminal output
         var cursor = document.createElement('span');
@@ -1088,8 +1231,12 @@ var chaosItems = [
             // Start flickering effect
             startFlicker();
             setTimeout(function() {
-              showPhase(1);
-            }, 500);
+              setCardState('complete');
+              setTimeout(function() {
+                showPhase(1);
+                setCardState('ready');
+              }, 500);
+            }, 300);
             return;
           }
 
@@ -1125,6 +1272,7 @@ var chaosItems = [
       document.getElementById('btn-tolerance').addEventListener('click', function() {
         this.disabled = true;
         this.textContent = 'Deciding...';
+        setCardState('running');
 
         // Stop the flickering
         stopFlicker();
@@ -1146,7 +1294,7 @@ var chaosItems = [
 
         var currentIdx = 0;
         var batchSize = Math.max(1, Math.ceil(shuffled.length / 50));
-        var batchDelay = 120;
+        var batchDelay = 180;
 
         // Progress bar
         var progressBar = document.getElementById('progress-tolerance');
@@ -1173,13 +1321,15 @@ var chaosItems = [
           if (currentIdx < shuffled.length) {
             setTimeout(processBatch, batchDelay);
           } else {
-            // Done - update counts and show phase 2
-            document.getElementById('tolerable-count').textContent = tolerableWords.length;
-            document.getElementById('not-tolerable-count').textContent = notTolerableWords.length;
-
+            // Done - ensure progress bar shows 100% before transition
+            progressFill.style.width = '100%';
             setTimeout(function() {
-              showPhase(2);
-            }, 500);
+              setCardState('complete');
+              setTimeout(function() {
+                showPhase(2);
+                setCardState('ready');
+              }, 500);
+            }, 300);
           }
         }
 
@@ -1190,6 +1340,7 @@ var chaosItems = [
       document.getElementById('btn-stewardship').addEventListener('click', function() {
         this.disabled = true;
         this.textContent = 'Applying...';
+        setCardState('running');
 
         panelBox.classList.remove('decision-visible');
         panelBox.classList.add('stewardship-visible');
@@ -1221,25 +1372,22 @@ var chaosItems = [
           progressFill.style.width = (removed / notTolerableWords.length * 100) + '%';
 
           if (removed < notTolerableWords.length) {
-            setTimeout(removeBatch, 80);
+            setTimeout(removeBatch, 210);
           } else {
+            // Ensure progress bar shows 100%
+            progressFill.style.width = '100%';
+
             // Fade tolerable to background
             tolerableWords.forEach(function(el) {
               el.classList.remove('tolerable');
               el.classList.add('kept');
             });
 
-            // Show metrics again and update to good values
+            // Prepare everything while hidden, then reveal together
             setTimeout(function() {
               stopMetricAnimation();
 
-              // Show metrics sections again
-              document.getElementById('month-indicator').classList.remove('hidden');
-              document.getElementById('month-indicator').textContent = 'Now';
-              document.querySelectorAll('.metrics-section').forEach(function(el) {
-                el.classList.remove('hidden');
-              });
-
+              // Update all metric values while still hidden
               var goodMetrics = {
                 'm-hours': '38h',
                 'm-oncall': '3',
@@ -1255,22 +1403,39 @@ var chaosItems = [
                 'm-morale': '4.3'
               };
 
-              Object.keys(goodMetrics).forEach(function(id, idx) {
-                setTimeout(function() {
-                  var el = document.getElementById(id);
-                  el.textContent = goodMetrics[id];
-                  el.classList.remove('bad', 'warn', 'pulse');
-                  el.classList.add('good', 'tick');
-                  setTimeout(function() {
-                    el.classList.remove('tick');
-                  }, 300);
-                }, idx * 80);
+              Object.keys(goodMetrics).forEach(function(id) {
+                var el = document.getElementById(id);
+                el.textContent = goodMetrics[id];
+                el.classList.remove('bad', 'warn', 'pulse');
+                el.classList.add('good');
               });
 
-              setTimeout(function() {
-                showPhase(3);
-              }, Object.keys(goodMetrics).length * 80 + 300);
-            }, 600);
+              document.getElementById('month-indicator').textContent = 'Now';
+
+              // Disable transitions, reveal everything, then re-enable
+              var monthEl = document.getElementById('month-indicator');
+              var metricSections = document.querySelectorAll('.metrics-section');
+
+              monthEl.style.transition = 'none';
+              metricSections.forEach(function(el) {
+                el.style.transition = 'none';
+              });
+
+              // Now reveal everything at once
+              showPhase(3);
+              setCardState('final');
+              monthEl.classList.remove('hidden');
+              metricSections.forEach(function(el) {
+                el.classList.remove('hidden');
+              });
+
+              // Force reflow then restore transitions
+              void monthEl.offsetWidth;
+              monthEl.style.transition = '';
+              metricSections.forEach(function(el) {
+                el.style.transition = '';
+              });
+            }, 500);
           }
         }
 
