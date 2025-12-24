@@ -321,7 +321,7 @@
     /* ===== METRICS ===== */
     .metrics {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 1rem 0.75rem;
       margin-bottom: 1.5rem;
       padding-bottom: 1.5rem;
@@ -649,10 +649,6 @@
             <div class="metric-value warn" id="m-unplanned">67%</div>
             <div class="metric-label">Unplanned</div>
           </div>
-          <div class="metric">
-            <div class="metric-value bad" id="m-meetings">18h</div>
-            <div class="metric-label">Meetings</div>
-          </div>
         </div>
       </div>
 
@@ -671,10 +667,6 @@
             <div class="metric-value warn" id="m-deploy">4.2d</div>
             <div class="metric-label">Deploy Time</div>
           </div>
-          <div class="metric">
-            <div class="metric-value bad pulse" id="m-slip">+6wk</div>
-            <div class="metric-label">Roadmap Slip</div>
-          </div>
         </div>
       </div>
 
@@ -688,10 +680,6 @@
           <div class="metric">
             <div class="metric-value bad" id="m-burnout">High</div>
             <div class="metric-label">Burnout</div>
-          </div>
-          <div class="metric">
-            <div class="metric-value warn" id="m-attrition">18%</div>
-            <div class="metric-label">Attrition</div>
           </div>
           <div class="metric">
             <div class="metric-value bad pulse" id="m-morale">2.1</div>
@@ -852,14 +840,11 @@
         'm-hours':     { base: 52, variance: 4, unit: 'h' },
         'm-oncall':    { base: 23, variance: 8, unit: '' },
         'm-unplanned': { base: 67, variance: 10, unit: '%' },
-        'm-meetings':  { base: 18, variance: 4, unit: 'h' },
         'm-velocity':  { base: 23, variance: 6, unit: '%' },
         'm-shipped':   { base: 2, variance: 1, unit: '' },
         'm-deploy':    { base: 4.2, variance: 1.5, unit: 'd', decimal: true },
-        'm-slip':      { base: 6, variance: 3, unit: 'wk', prefix: '+' },
         'm-incidents': { base: 47, variance: 12, unit: '' },
         'm-burnout':   { base: 0, variance: 0, unit: '', values: ['High', 'High', 'Med', 'High'] },
-        'm-attrition': { base: 18, variance: 5, unit: '%' },
         'm-morale':    { base: 2.1, variance: 0.4, unit: '', decimal: true }
       };
 
@@ -1392,14 +1377,11 @@ var chaosItems = [
                 'm-hours': '38h',
                 'm-oncall': '3',
                 'm-unplanned': '15%',
-                'm-meetings': '6h',
                 'm-velocity': '78%',
                 'm-shipped': '12',
                 'm-deploy': '0.5d',
-                'm-slip': '0',
                 'm-incidents': '4',
                 'm-burnout': 'Low',
-                'm-attrition': '6%',
                 'm-morale': '4.3'
               };
 
