@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Make Infrastructure Boring Again | BoringOps</title>
+  <meta name="description" content="Your engineers already know what's broken. They've been saying it for months. You just can't hear them over the incident bridge.">
+
+  <meta property="og:title" content="Make Infrastructure Boring Again">
+  <meta property="og:description" content="See what BoringOps does to operational chaos.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://makeinfrastructureboringagain.com">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Make Infrastructure Boring Again">
+  <meta name="twitter:description" content="See what BoringOps does to operational chaos.">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Make Infrastructure Boring Again",
+    "description": "Infrastructure consulting for organizations ready to decide what they will no longer pay for.",
+    "publisher": {
+      "@type": "Organization",
+      "name": "BoringOps",
+      "url": "https://boringops.run"
+    }
+  }
+  </script>
+
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #000;
+      --fg: #e8e6e3;
+      --fg-muted: rgba(232, 230, 227, 0.5);
+      --accent: #f97316;
+      --red: #ef4444;
+      --green: #22c55e;
+      --yellow: #fbbf24;
+      --font-primary: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-primary);
+      overflow-x: hidden;
+    }
+
+    /* ===== CHAOS BACKGROUND (hidden initially) ===== */
+    .chaos-grid {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 115vw;
+      height: 100vh;
+      font-family: var(--font-mono);
+      font-size: 0.775rem;
+      line-height: 2.3;
+      overflow: hidden;
+      z-index: 1;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+      padding: 0.4rem 0.6rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: 0 0.8rem;
+    }
+
+    .chaos-grid.visible {
+      opacity: 1;
+    }
+
+    .chaos-word {
+      color: rgba(255, 255, 255, 0.24);
+      white-space: nowrap;
+      opacity: 0;
+      transition: color 0.4s ease, text-shadow 0.4s ease, opacity 0.15s ease, transform 0.6s ease;
+    }
+
+    .chaos-word.visible {
+      opacity: 1;
+    }
+
+    .chaos-word.flicker {
+      color: rgba(239, 68, 68, 1);
+      text-shadow: 0 0 12px rgba(239, 68, 68, 0.8);
+    }
+
+    .chaos-cursor {
+      display: inline-block;
+      width: 0.5em;
+      height: 1em;
+      background: var(--fg);
+      vertical-align: middle;
+      animation: cursor-blink 0.6s steps(1) infinite;
+    }
+
+    @keyframes cursor-blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+
+    .chaos-word.typed::after {
+      content: '·';
+      margin-left: 0.8rem;
+      color: rgba(255, 255, 255, 0.18);
+    }
+
+    .chaos-word.lit {
+      color: rgba(239, 68, 68, 0.85);
+      text-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+    }
+
+    .chaos-word.scanning {
+      color: rgba(251, 191, 36, 1) !important;
+      text-shadow: 0 0 15px rgba(251, 191, 36, 0.8) !important;
+      background: rgba(251, 191, 36, 0.2);
+      padding: 0 0.2em;
+      margin: 0 -0.2em;
+      border-radius: 2px;
+    }
+
+    .chaos-word.tolerable {
+      color: rgba(239, 68, 68, 0.9) !important;
+      text-shadow: 0 0 6px rgba(239, 68, 68, 0.5) !important;
+      animation: accept-pulse 0.5s ease-out;
+    }
+
+    @keyframes accept-pulse {
+      0% {
+        color: rgba(255, 255, 255, 1);
+        text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+      }
+      100% {
+        color: rgba(239, 68, 68, 0.9);
+        text-shadow: 0 0 6px rgba(239, 68, 68, 0.5);
+      }
+    }
+
+    .chaos-word.not-tolerable {
+      color: rgba(239, 68, 68, 0.2) !important;
+      text-shadow: none !important;
+      text-decoration: line-through;
+      animation: reject-pulse 0.5s ease-out;
+    }
+
+    @keyframes reject-pulse {
+      0% {
+        color: rgba(239, 68, 68, 1);
+        text-shadow: 0 0 12px rgba(239, 68, 68, 0.8);
+      }
+      100% {
+        color: rgba(239, 68, 68, 0.2);
+        text-shadow: none;
+      }
+    }
+
+    .chaos-word.resolved {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.6s ease-out, transform 0.6s ease-out, filter 0.6s ease-out;
+    }
+
+    .chaos-word.resolved.fly-up {
+      transform: translateY(-80px) rotate(-15deg) scale(0.5);
+    }
+
+    .chaos-word.resolved.fly-down {
+      transform: translateY(80px) rotate(15deg) scale(0.5);
+    }
+
+    .chaos-word.resolved.fly-left {
+      transform: translateX(-80px) rotate(-10deg) scale(0.5);
+    }
+
+    .chaos-word.resolved.fly-right {
+      transform: translateX(80px) rotate(10deg) scale(0.5);
+    }
+
+    .chaos-word.resolved.shrink {
+      transform: scale(0) rotate(180deg);
+    }
+
+    .chaos-word.resolved.fade-blur {
+      transform: scale(0.8);
+      filter: blur(8px);
+    }
+
+    .chaos-word.resolved.spin-out {
+      transform: rotate(360deg) scale(0);
+    }
+
+    .chaos-word.resolved.implode {
+      transform: scale(0);
+    }
+
+    .chaos-word.resolved.explode {
+      transform: scale(2);
+    }
+
+    .chaos-word.resolved.flip-away {
+      transform: perspective(500px) rotateX(90deg) scale(0.5);
+    }
+
+    .chaos-word.resolved.dissolve {
+      filter: blur(12px) brightness(2);
+    }
+
+    .chaos-word.resolved.zoom-fade {
+      transform: scale(0);
+    }
+
+    .chaos-word.resolved.poof {
+      transform: scale(1.5);
+      filter: blur(15px);
+    }
+
+    .chaos-word.kept {
+      color: rgba(239, 68, 68, 0.9) !important;
+      text-shadow: 0 0 6px rgba(239, 68, 68, 0.5) !important;
+    }
+
+    /* ===== MAIN CONTENT OVERLAY ===== */
+    .main-panel {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      padding: 2rem;
+    }
+
+    .panel-box {
+      background: rgba(0, 0, 0, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      padding: 2rem 2.5rem;
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+      transition: border-color 0.3s ease;
+    }
+
+    .panel-box.chaos-visible {
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    .panel-box.decision-visible {
+      border-color: rgba(251, 191, 36, 0.4);
+    }
+
+    .panel-box.stewardship-visible {
+      border-color: rgba(249, 115, 22, 0.4);
+    }
+
+    /* ===== METRICS ===== */
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem 0.75rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .metric {
+      text-align: center;
+      padding: 0.5rem 0.25rem;
+    }
+
+    .metric-value {
+      font-family: var(--font-mono);
+      font-size: 1.1rem;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 0.3rem;
+      transition: color 0.5s ease, transform 0.3s ease;
+    }
+
+    .metric-value.bad {
+      color: var(--red);
+    }
+
+    .metric-value.warn {
+      color: var(--yellow);
+    }
+
+    .metric-value.good {
+      color: var(--green);
+    }
+
+    .metric-value.pulse {
+      animation: metric-pulse 2s ease-in-out infinite;
+    }
+
+    .metric-value.tick {
+      animation: metric-tick 0.3s ease;
+    }
+
+    @keyframes metric-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    @keyframes metric-tick {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+
+    .metric-label {
+      font-size: 0.55rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--fg-muted);
+      line-height: 1.3;
+    }
+
+    .metrics-section {
+      margin-bottom: 1.25rem;
+      transition: opacity 0.5s ease, max-height 0.5s ease;
+    }
+
+    .metrics-section.hidden {
+      opacity: 0;
+      max-height: 0;
+      overflow: hidden;
+      margin-bottom: 0;
+    }
+
+    .metrics-section-label {
+      font-size: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: rgba(255, 255, 255, 0.25);
+      margin-bottom: 0.5rem;
+      text-align: left;
+    }
+
+    .month-indicator {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--fg-muted);
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      letter-spacing: 0.1em;
+      transition: opacity 0.5s ease, color 0.3s ease;
+    }
+
+    .month-indicator.hidden {
+      opacity: 0;
+    }
+
+    .month-indicator.pulse {
+      animation: month-pulse 0.6s ease-out forwards;
+    }
+
+    @keyframes month-pulse {
+      0% { color: var(--fg); }
+      100% { color: var(--fg-muted); }
+    }
+
+    /* ===== PHASE CONTENT ===== */
+    .phase-content {
+      display: none;
+    }
+
+    .phase-content.active {
+      display: block;
+    }
+
+    .phase-title {
+      font-size: 0.65rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+
+    .phase-headline {
+      font-size: 1.4rem;
+      font-weight: 600;
+      line-height: 1.35;
+      margin-bottom: 1rem;
+      color: var(--fg);
+    }
+
+    .phase-desc {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: var(--fg-muted);
+      margin-bottom: 2rem;
+    }
+
+    /* ===== BUTTONS ===== */
+    .action-btn {
+      padding: 1rem 2rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: var(--font-primary);
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+      box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+    }
+
+    .action-btn:hover {
+      background: rgba(249, 115, 22, 0.9);
+      box-shadow: 0 0 40px rgba(249, 115, 22, 0.5);
+      transform: translateY(-1px);
+    }
+
+    .action-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* ===== FINAL CTA ===== */
+    .final-cta {
+      margin-top: 1.5rem;
+    }
+
+    .cta-row {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      margin-bottom: 0.75rem;
+    }
+
+    input[type="email"] {
+      width: 200px;
+      padding: 0.8rem 1rem;
+      font-size: 0.9rem;
+      font-family: var(--font-primary);
+      background: #111;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+      color: var(--fg);
+      outline: none;
+      transition: border-color 150ms ease;
+    }
+
+    input[type="email"]::placeholder {
+      color: var(--fg-muted);
+    }
+
+    input[type="email"]:focus {
+      border-color: var(--accent);
+    }
+
+    .cta-btn {
+      padding: 0.8rem 1.25rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: var(--font-primary);
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: background 150ms ease;
+      white-space: nowrap;
+    }
+
+    .cta-btn:hover {
+      background: rgba(249, 115, 22, 0.88);
+    }
+
+    .privacy {
+      font-size: 0.65rem;
+      color: var(--fg-muted);
+    }
+
+    .footer {
+      margin-top: 2rem;
+    }
+
+    .footer a {
+      font-size: 0.8rem;
+      color: var(--accent);
+      text-decoration: none;
+      opacity: 0.7;
+      transition: opacity 150ms ease;
+    }
+
+    .footer a:hover {
+      opacity: 1;
+    }
+
+    /* ===== PROCESSING INDICATOR ===== */
+    .processing {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--fg-muted);
+      margin-top: 1rem;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      margin-top: 1.5rem;
+      overflow: hidden;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .progress-bar.visible {
+      opacity: 1;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      transition: width 0.1s ease;
+    }
+
+    @media (max-width: 550px) {
+      .panel-box {
+        padding: 2rem 1.5rem;
+      }
+
+      .metrics {
+        gap: 1rem;
+      }
+
+      .metric-value {
+        font-size: 1.5rem;
+      }
+
+      .cta-row {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      input[type="email"], .cta-btn {
+        width: 100%;
+        max-width: 250px;
+      }
+
+      .chaos-grid {
+        font-size: 0.6rem;
+        line-height: 2;
+        padding: 0.3rem 0.4rem;
+        gap: 0 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Chaos background (hidden initially) -->
+  <div class="chaos-grid" id="chaos-grid"></div>
+
+  <!-- Main content panel -->
+  <div class="main-panel">
+    <div class="panel-box" id="panel-box">
+
+      <!-- Month indicator -->
+      <div class="month-indicator" id="month-indicator">Jan</div>
+
+      <!-- Metrics -->
+      <div class="metrics-section">
+        <div class="metrics-section-label">Effort</div>
+        <div class="metrics">
+          <div class="metric">
+            <div class="metric-value warn" id="m-hours">52h</div>
+            <div class="metric-label">Avg Week</div>
+          </div>
+          <div class="metric">
+            <div class="metric-value bad pulse" id="m-oncall">23</div>
+            <div class="metric-label">Pages/wk</div>
+          </div>
+          <div class="metric">
+            <div class="metric-value warn" id="m-unplanned">67%</div>
+            <div class="metric-label">Unplanned</div>
+          </div>
+          <div class="metric">
+            <div class="metric-value bad" id="m-meetings">18h</div>
+            <div class="metric-label">Meetings</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="metrics-section">
+        <div class="metrics-section-label">Output</div>
+        <div class="metrics">
+          <div class="metric">
+            <div class="metric-value bad" id="m-velocity">23%</div>
+            <div class="metric-label">Velocity</div>
+          </div>
+          <div class="metric">
+            <div class="metric-value bad" id="m-shipped">2</div>
+            <div class="metric-label">Shipped/Q</div>
+          </div>
+          <div class="metric">
+            <div class="metric-value warn" id="m-deploy">4.2d</div>
+            <div class="metric-label">Deploy Time</div>
+          </div>
+          <div class="metric">
+            <div class="metric-value bad pulse" id="m-slip">+6wk</div>
+            <div class="metric-label">Roadmap Slip</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="metrics-section" style="margin-bottom: 0; padding-bottom: 0;">
+        <div class="metrics-section-label">Health</div>
+        <div class="metrics" style="border-bottom: none; padding-bottom: 0; margin-bottom: 1rem;">
+          <div class="metric">
+            <div class="metric-value bad" id="m-incidents">47</div>
+            <div class="metric-label">Incidents/mo</div>
+          </div>
+          <div class="metric">
+            <div class="metric-value bad" id="m-burnout">High</div>
+            <div class="metric-label">Burnout</div>
+          </div>
+          <div class="metric">
+            <div class="metric-value warn" id="m-attrition">18%</div>
+            <div class="metric-label">Attrition</div>
+          </div>
+          <div class="metric">
+            <div class="metric-value bad pulse" id="m-morale">2.1</div>
+            <div class="metric-label">Morale</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase 0: Initial state -->
+      <div class="phase-content active" id="phase-0">
+        <div class="phase-title">Current State</div>
+        <h2 class="phase-headline">Everyone is working hard. Nothing is getting done.</h2>
+        <p class="phase-desc">It's not one big thing. It's a thousand small ones. The business can't see them. Your engineers feel every single one.</p>
+        <button class="action-btn" id="btn-assessment">Apply Chaos Assessment</button>
+        <div class="progress-bar" id="progress-assessment">
+          <div class="progress-bar-fill" id="progress-assessment-fill"></div>
+        </div>
+      </div>
+
+      <!-- Phase 1: After assessment -->
+      <div class="phase-content" id="phase-1">
+        <div class="phase-title">Chaos Assessment Complete</div>
+        <h2 class="phase-headline">Now you see where capacity leaks.</h2>
+        <p class="phase-desc">The chaos was always there. Now it's visible. Each item consumes engineering hours.</p>
+        <button class="action-btn" id="btn-tolerance">Apply Chaos Tolerance Decision</button>
+        <div class="progress-bar" id="progress-tolerance">
+          <div class="progress-bar-fill" id="progress-tolerance-fill"></div>
+        </div>
+      </div>
+
+      <!-- Phase 2: After tolerance decision -->
+      <div class="phase-content" id="phase-2">
+        <div class="phase-title">Tolerance Decision Complete</div>
+        <h2 class="phase-headline">Some chaos you fix. Some you accept.</h2>
+        <p class="phase-desc"><span id="tolerable-count">0</span> items tolerated. <span id="not-tolerable-count">0</span> items marked for elimination.</p>
+        <button class="action-btn" id="btn-stewardship">Apply Stewardship</button>
+        <div class="progress-bar" id="progress-stewardship">
+          <div class="progress-bar-fill" id="progress-stewardship-fill"></div>
+        </div>
+      </div>
+
+      <!-- Phase 3: Final state -->
+      <div class="phase-content" id="phase-3">
+        <div class="phase-title">Stewardship Active</div>
+        <h2 class="phase-headline">Capacity returns. The team ships.</h2>
+        <p class="phase-desc">The remaining chaos is acknowledged and owned. Everything else is gone.</p>
+
+        <form class="final-cta" id="signup-form">
+          <div class="cta-row">
+            <input type="email" id="email" placeholder="your@email.com" required>
+            <button type="submit" class="cta-btn">Start Here</button>
+          </div>
+          <p class="privacy">No spam. Just clarity.</p>
+        </form>
+
+        <div class="footer">
+          <a href="https://boringops.run">boringops.run</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // Metric animation - cycles through months showing persistent chaos
+      var metricAnimationInterval;
+      var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      var currentMonth = 0;
+
+      // Base values with variance range for each metric
+      var metricDefs = {
+        'm-hours':     { base: 52, variance: 4, unit: 'h' },
+        'm-oncall':    { base: 23, variance: 8, unit: '' },
+        'm-unplanned': { base: 67, variance: 10, unit: '%' },
+        'm-meetings':  { base: 18, variance: 4, unit: 'h' },
+        'm-velocity':  { base: 23, variance: 6, unit: '%' },
+        'm-shipped':   { base: 2, variance: 1, unit: '' },
+        'm-deploy':    { base: 4.2, variance: 1.5, unit: 'd', decimal: true },
+        'm-slip':      { base: 6, variance: 3, unit: 'wk', prefix: '+' },
+        'm-incidents': { base: 47, variance: 12, unit: '' },
+        'm-burnout':   { base: 0, variance: 0, unit: '', values: ['High', 'High', 'Med', 'High'] },
+        'm-attrition': { base: 18, variance: 5, unit: '%' },
+        'm-morale':    { base: 2.1, variance: 0.4, unit: '', decimal: true }
+      };
+
+      function animateMetrics() {
+        var monthEl = document.getElementById('month-indicator');
+
+        metricAnimationInterval = setInterval(function() {
+          // Advance month
+          currentMonth = (currentMonth + 1) % 12;
+
+          // Update month display with pulse
+          monthEl.textContent = months[currentMonth];
+          monthEl.classList.remove('pulse');
+          void monthEl.offsetWidth; // force reflow
+          monthEl.classList.add('pulse');
+
+          // Update each metric with some variance
+          Object.keys(metricDefs).forEach(function(id, idx) {
+            setTimeout(function() {
+              var def = metricDefs[id];
+              var el = document.getElementById(id);
+              var newVal;
+
+              if (def.values) {
+                // Use predefined value list
+                newVal = def.values[currentMonth % def.values.length];
+              } else {
+                // Calculate random variance
+                var variance = (Math.random() - 0.5) * 2 * def.variance;
+                newVal = def.base + variance;
+
+                if (def.decimal) {
+                  newVal = newVal.toFixed(1);
+                } else {
+                  newVal = Math.round(newVal);
+                }
+
+                if (def.prefix) {
+                  newVal = def.prefix + newVal;
+                }
+                newVal = newVal + def.unit;
+              }
+
+              el.textContent = newVal;
+              el.classList.add('tick');
+              setTimeout(function() {
+                el.classList.remove('tick');
+              }, 250);
+            }, idx * 40); // Stagger updates
+          });
+        }, 1800); // Change month every 1.8 seconds
+      }
+
+      function stopMetricAnimation() {
+        if (metricAnimationInterval) {
+          clearInterval(metricAnimationInterval);
+        }
+      }
+
+      // Start metric animation
+      setTimeout(animateMetrics, 800);
+
+var chaosItems = [
+  'deploy cannot be reproduced',
+  'deploy requires guessing',
+  'rollback makes things worse',
+  'rollback breaks new services',
+  'rollback requires manual edits',
+  'rollback path unknown',
+  'rollback takes longer than deploy',
+
+  'incidents recur without code changes',
+  'incidents resolved without explanation',
+  'incidents closed without confidence',
+  'incidents “fixed” by restarting',
+  'incidents depend on one person',
+  'incidents resolved by trial and error',
+  'incidents stall while people argue',
+  'incidents split into competing theories',
+
+  'nobody can state what is broken',
+  'nobody can state what is safe',
+  'nobody can state what changed',
+  'nobody can state when it changed',
+  'nobody can state why it changed',
+
+  'alerts fire without actionable detail',
+  'alerts contradict each other',
+  'alerts ignored because they are always wrong',
+  'alerts silenced because they are noisy',
+  'alerts arrive after customers complain',
+  'alerts miss customer-impacting failures',
+
+  'monitoring added during outages',
+  'monitoring removed to reduce noise',
+  'monitoring owned by no team',
+  'monitoring dashboards disagree',
+  'monitoring measures proxies not reality',
+
+  'logs required for diagnosis do not exist',
+  'logs exist but are incomplete',
+  'logs exist but are delayed',
+  'logs exist but cannot be correlated',
+  'logs require tribal knowledge to interpret',
+
+  'runbooks contradict actual behavior',
+  'runbooks assume knowledge that no one has',
+  'runbooks reference systems that no longer exist',
+  'runbooks succeed only when a specific person runs them',
+  'runbooks skipped because they slow things down',
+
+  'changes applied without understanding impact',
+  'changes applied without rollback plans',
+  'changes applied because they worked last time',
+  'changes applied differently each time',
+  'changes require undocumented sequencing',
+
+  'approvals happen after execution',
+  'approvals are inferred not recorded',
+  'approvals happen in private channels',
+  'approvals cannot be audited',
+  'approvals exist only in memory',
+
+  'environment behavior differs without explanation',
+  'prod behaves differently than staging',
+  'staging behaves differently than dev',
+  'no environment matches production',
+
+  'configuration changes are irreversible',
+  'configuration state cannot be reconstructed',
+  'configuration drift is discovered accidentally',
+  'configuration ownership is unclear',
+
+  'secrets expire without warning',
+  'secrets rotated without coordination',
+  'secrets stored in multiple unknown locations',
+  'secrets break systems unpredictably',
+
+  'certificates expire unexpectedly',
+  'certificate renewal depends on manual steps',
+  'certificate ownership is unknown',
+  'certificate renewal breaks traffic',
+
+  'capacity failures appear without load changes',
+  'capacity planning is reactive',
+  'autoscaling hides structural limits',
+  'autoscaling amplifies failures',
+
+  'retries cause additional damage',
+  'timeouts trigger cascading retries',
+  'systems recover only when traffic stops',
+  'failures propagate across unrelated services',
+
+  'databases lock under normal usage',
+  'database migrations partially apply',
+  'database state cannot be verified',
+  'data correctness depends on restart order',
+
+  'backups succeed but restores fail',
+  'restores have never been tested',
+  'data loss discovered days later',
+  'data inconsistencies are tolerated',
+
+  'message queues silently drop messages',
+  'messages replay unpredictably',
+  'consumers cannot be restarted safely',
+  'event ordering assumptions are implicit',
+
+  'permissions prevent recovery actions',
+  'emergency access bypasses all controls',
+  'access changes are undocumented',
+  'access ownership is unclear',
+
+  'deploys require calendar coordination',
+  'deploys require specific individuals',
+  'deploys avoided due to fear',
+  'deploy windows exist because systems are fragile',
+
+  'hotfixes bypass normal controls',
+  'hotfixes are never removed',
+  'temporary fixes become permanent dependencies',
+
+  'feature flags hide broken behavior',
+  'feature flags lack clear ownership',
+  'feature flags remain after purpose ends',
+  'feature flag state is unknown',
+
+  'customers detect failures before teams do',
+  'support lacks accurate technical status',
+  'status updates contradict internal reality',
+  'status updates lag actual recovery',
+
+  'SLA breaches are discovered retroactively',
+  'error budgets are unknown or ignored',
+  'availability targets are aspirational only',
+
+  'the same failure happens repeatedly',
+  'root causes are re-labeled not removed',
+  'postmortems describe symptoms not causes',
+  'postmortems produce no binding changes',
+
+  'teams normalize degraded behavior',
+  'teams accept failure as baseline',
+  'teams compensate manually for system gaps',
+  'teams build tools to survive the system',
+
+  'knowledge exits with employees',
+  'new hires avoid touching critical systems',
+  'systems are feared not understood',
+  'nobody feels safe making changes',
+
+  'the system requires heroics to function',
+  'calm operation is considered unrealistic',
+  'success depends on luck',
+  'failure is considered inevitable'
+];
+
+
+      var grid = document.getElementById('chaos-grid');
+      var panelBox = document.getElementById('panel-box');
+      var wordEls = [];
+      var tolerableWords = [];
+      var notTolerableWords = [];
+
+      // Calculate how many phrases fit on visible screen only
+      var fontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) * 0.775;
+      var avgCharWidth = fontSize * 0.6;
+      var avgPhraseChars = 30; // slightly higher estimate
+      var gapWidth = fontSize * 1.5;
+      var phraseWidth = (avgPhraseChars * avgCharWidth) + gapWidth;
+
+      var lineHeight = fontSize * 2.3;
+      var containerWidth = window.innerWidth * 1.15; // 115vw
+      var containerHeight = window.innerHeight;
+
+      var phrasesPerRow = Math.floor(containerWidth / phraseWidth);
+      var rows = Math.floor(containerHeight / lineHeight) - 1; // leave room at bottom
+      var wordCount = phrasesPerRow * rows;
+
+      // Shuffle the original list
+      var shuffled = chaosItems.slice();
+      for (var i = shuffled.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = shuffled[i];
+        shuffled[i] = shuffled[j];
+        shuffled[j] = temp;
+      }
+
+      // Only repeat if we need more than the list has
+      var screenFill = [];
+      while (screenFill.length < wordCount) {
+        screenFill = screenFill.concat(shuffled);
+      }
+      screenFill = screenFill.slice(0, wordCount);
+
+      screenFill.forEach(function(text) {
+        var span = document.createElement('span');
+        span.className = 'chaos-word';
+        span.textContent = text;
+        grid.appendChild(span);
+        wordEls.push(span);
+      });
+
+      // Flickering effect for chaos
+      var flickerInterval = null;
+      var flickeringEls = [];
+
+      function startFlicker() {
+        flickerInterval = setInterval(function() {
+          // Pick a random element to flicker
+          var idx = Math.floor(Math.random() * wordEls.length);
+          var el = wordEls[idx];
+
+          if (!el.classList.contains('flicker')) {
+            el.classList.add('flicker');
+            flickeringEls.push(el);
+
+            // Remove after a random duration
+            setTimeout(function() {
+              el.classList.remove('flicker');
+              var i = flickeringEls.indexOf(el);
+              if (i > -1) flickeringEls.splice(i, 1);
+            }, 700 + Math.random() * 400);
+          }
+
+          // Cap at 10 simultaneous flickers
+          while (flickeringEls.length > 10) {
+            var old = flickeringEls.shift();
+            old.classList.remove('flicker');
+          }
+        }, 80);
+      }
+
+      function stopFlicker() {
+        if (flickerInterval) {
+          clearInterval(flickerInterval);
+          flickerInterval = null;
+        }
+        flickeringEls.forEach(function(el) {
+          el.classList.remove('flicker');
+        });
+        flickeringEls = [];
+      }
+
+      // Phase transitions
+      function showPhase(num) {
+        document.querySelectorAll('.phase-content').forEach(function(el) {
+          el.classList.remove('active');
+        });
+        document.getElementById('phase-' + num).classList.add('active');
+      }
+
+      // Phase 0 -> 1: Chaos Assessment
+      document.getElementById('btn-assessment').addEventListener('click', function() {
+        this.disabled = true;
+        this.textContent = 'Assessing...';
+
+        // Hide metrics during assessment
+        document.getElementById('month-indicator').classList.add('hidden');
+        document.querySelectorAll('.metrics-section').forEach(function(el) {
+          el.classList.add('hidden');
+        });
+
+        // Show chaos grid (stays grey until tolerance decision)
+        grid.classList.add('visible');
+        panelBox.classList.add('chaos-visible');
+
+        // Type out each character like terminal output
+        var cursor = document.createElement('span');
+        cursor.className = 'chaos-cursor';
+
+        var wordIdx = 0;
+        var charIdx = 0;
+        var charsPerTick = 6; // characters per frame
+        var tickDelay = 12; // ms between frames
+
+        // Store original text and clear elements
+        var wordTexts = wordEls.map(function(el) {
+          var text = el.textContent;
+          el.textContent = '';
+          el.classList.add('visible');
+          return text;
+        });
+
+        // Progress bar
+        var progressBar = document.getElementById('progress-assessment');
+        var progressFill = document.getElementById('progress-assessment-fill');
+        progressBar.classList.add('visible');
+
+        grid.insertBefore(cursor, wordEls[0]);
+
+        function typeNext() {
+          if (wordIdx >= wordEls.length) {
+            cursor.remove();
+            progressFill.style.width = '100%';
+            // Start flickering effect
+            startFlicker();
+            setTimeout(function() {
+              showPhase(1);
+            }, 500);
+            return;
+          }
+
+          var el = wordEls[wordIdx];
+          var fullText = wordTexts[wordIdx];
+
+          // Type several characters per tick
+          for (var i = 0; i < charsPerTick && charIdx < fullText.length; i++) {
+            el.textContent += fullText[charIdx];
+            charIdx++;
+          }
+
+          // Move cursor after current element
+          el.after(cursor);
+
+          if (charIdx >= fullText.length) {
+            // Word complete - add divider
+            el.classList.add('typed');
+            wordIdx++;
+            charIdx = 0;
+
+            // Update progress bar based on completed words
+            progressFill.style.width = (wordIdx / wordEls.length * 100) + '%';
+          }
+
+          setTimeout(typeNext, tickDelay);
+        }
+
+        setTimeout(typeNext, 100);
+      });
+
+      // Phase 1 -> 2: Tolerance Decision
+      document.getElementById('btn-tolerance').addEventListener('click', function() {
+        this.disabled = true;
+        this.textContent = 'Deciding...';
+
+        // Stop the flickering
+        stopFlicker();
+
+        panelBox.classList.remove('chaos-visible');
+        panelBox.classList.add('decision-visible');
+
+        // Randomly assign tolerable (15%) vs not-tolerable (85%)
+        var shuffled = wordEls.slice();
+        for (var i = shuffled.length - 1; i > 0; i--) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var temp = shuffled[i];
+          shuffled[i] = shuffled[j];
+          shuffled[j] = temp;
+        }
+
+        var tolerableCount = Math.floor(shuffled.length * 0.15);
+        var tolerableSet = new Set(shuffled.slice(0, tolerableCount));
+
+        var currentIdx = 0;
+        var batchSize = Math.max(1, Math.ceil(shuffled.length / 50));
+        var batchDelay = 120;
+
+        // Progress bar
+        var progressBar = document.getElementById('progress-tolerance');
+        var progressFill = document.getElementById('progress-tolerance-fill');
+        progressBar.classList.add('visible');
+
+        function processBatch() {
+          var end = Math.min(currentIdx + batchSize, shuffled.length);
+
+          for (var i = currentIdx; i < end; i++) {
+            var el = shuffled[i];
+            if (tolerableSet.has(el)) {
+              el.classList.add('tolerable');
+              tolerableWords.push(el);
+            } else {
+              el.classList.add('not-tolerable');
+              notTolerableWords.push(el);
+            }
+          }
+
+          currentIdx = end;
+          progressFill.style.width = (currentIdx / shuffled.length * 100) + '%';
+
+          if (currentIdx < shuffled.length) {
+            setTimeout(processBatch, batchDelay);
+          } else {
+            // Done - update counts and show phase 2
+            document.getElementById('tolerable-count').textContent = tolerableWords.length;
+            document.getElementById('not-tolerable-count').textContent = notTolerableWords.length;
+
+            setTimeout(function() {
+              showPhase(2);
+            }, 500);
+          }
+        }
+
+        setTimeout(processBatch, 300);
+      });
+
+      // Phase 2 -> 3: Stewardship
+      document.getElementById('btn-stewardship').addEventListener('click', function() {
+        this.disabled = true;
+        this.textContent = 'Applying...';
+
+        panelBox.classList.remove('decision-visible');
+        panelBox.classList.add('stewardship-visible');
+
+        // Remove not-tolerable items with animations
+        var removed = 0;
+        var flyClasses = [
+          'fly-up', 'fly-down', 'fly-left', 'fly-right',
+          'shrink', 'fade-blur', 'spin-out', 'implode',
+          'explode', 'flip-away', 'dissolve', 'zoom-fade', 'poof'
+        ];
+
+        // Progress bar
+        var progressBar = document.getElementById('progress-stewardship');
+        var progressFill = document.getElementById('progress-stewardship-fill');
+        progressBar.classList.add('visible');
+
+        function removeBatch() {
+          var batchSize = 3;
+          var end = Math.min(removed + batchSize, notTolerableWords.length);
+
+          for (var i = removed; i < end; i++) {
+            var el = notTolerableWords[i];
+            var randomFly = flyClasses[Math.floor(Math.random() * flyClasses.length)];
+            el.classList.add('resolved', randomFly);
+          }
+
+          removed = end;
+          progressFill.style.width = (removed / notTolerableWords.length * 100) + '%';
+
+          if (removed < notTolerableWords.length) {
+            setTimeout(removeBatch, 80);
+          } else {
+            // Fade tolerable to background
+            tolerableWords.forEach(function(el) {
+              el.classList.remove('tolerable');
+              el.classList.add('kept');
+            });
+
+            // Show metrics again and update to good values
+            setTimeout(function() {
+              stopMetricAnimation();
+
+              // Show metrics sections again
+              document.getElementById('month-indicator').classList.remove('hidden');
+              document.getElementById('month-indicator').textContent = 'Now';
+              document.querySelectorAll('.metrics-section').forEach(function(el) {
+                el.classList.remove('hidden');
+              });
+
+              var goodMetrics = {
+                'm-hours': '38h',
+                'm-oncall': '3',
+                'm-unplanned': '15%',
+                'm-meetings': '6h',
+                'm-velocity': '78%',
+                'm-shipped': '12',
+                'm-deploy': '0.5d',
+                'm-slip': '0',
+                'm-incidents': '4',
+                'm-burnout': 'Low',
+                'm-attrition': '6%',
+                'm-morale': '4.3'
+              };
+
+              Object.keys(goodMetrics).forEach(function(id, idx) {
+                setTimeout(function() {
+                  var el = document.getElementById(id);
+                  el.textContent = goodMetrics[id];
+                  el.classList.remove('bad', 'warn', 'pulse');
+                  el.classList.add('good', 'tick');
+                  setTimeout(function() {
+                    el.classList.remove('tick');
+                  }, 300);
+                }, idx * 80);
+              });
+
+              setTimeout(function() {
+                showPhase(3);
+              }, Object.keys(goodMetrics).length * 80 + 300);
+            }, 600);
+          }
+        }
+
+        setTimeout(removeBatch, 300);
+      });
+
+      // Form handler
+      var form = document.getElementById('signup-form');
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var email = document.getElementById('email').value;
+        if (email) {
+          window.location.href = 'mailto:hello@boringops.run?subject=From%20makeinfrastructureboringagain&body=Email:%20' + encodeURIComponent(email);
+        }
+      });
+
+    })();
+  </script>
+</body>
+</html>
