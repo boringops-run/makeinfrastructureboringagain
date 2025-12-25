@@ -242,12 +242,14 @@
       position: fixed;
       top: 1.5rem;
       left: 1.5rem;
-      max-width: 280px;
+      width: calc(25vw - 2rem);
       max-height: calc(100vh - 3rem);
       overflow-y: auto;
-      z-index: 5;
+      overflow-x: hidden;
+      z-index: 1;
       opacity: 0;
       transition: opacity 0.5s ease;
+      padding: 0.75rem 1rem;
     }
 
     .ordered-chaos.visible {
@@ -256,7 +258,7 @@
 
     .ordered-chaos-title {
       font-family: var(--font-mono);
-      font-size: 0.6rem;
+      font-size: clamp(0.4rem, 0.6vw, 0.6rem);
       text-transform: uppercase;
       letter-spacing: 0.15em;
       color: rgba(255, 255, 255, 0.4);
@@ -265,7 +267,7 @@
 
     .ordered-chaos-item {
       font-family: var(--font-mono);
-      font-size: 0.7rem;
+      font-size: clamp(0.45rem, 0.7vw, 0.7rem);
       line-height: 1.6;
       color: rgba(239, 68, 68, 0.7);
       white-space: nowrap;
@@ -283,16 +285,48 @@
       margin-right: 0.5em;
     }
 
-    @media (max-width: 600px) {
-      .ordered-chaos {
-        top: 1rem;
-        left: 1rem;
-        max-width: 160px;
-      }
+    /* ===== REMOVED CHAOS BACKGROUND ===== */
+    .removed-chaos {
+      position: fixed;
+      top: 0;
+      left: calc(25vw + 1rem);
+      right: 0;
+      bottom: 0;
+      z-index: 1;
+      padding: 1.5rem;
+      overflow: hidden;
+      opacity: 0;
+      transition: opacity 1s ease;
+      pointer-events: none;
+    }
 
-      .ordered-chaos-item {
-        font-size: 0.55rem;
-      }
+    .removed-chaos.visible {
+      opacity: 1;
+    }
+
+    .removed-chaos-title {
+      font-family: var(--font-mono);
+      font-size: clamp(0.4rem, 0.6vw, 0.6rem);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: rgba(255, 255, 255, 0.25);
+      margin-bottom: 1rem;
+    }
+
+    .removed-chaos-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3em 0.8em;
+      align-content: flex-start;
+    }
+
+    .removed-chaos-item {
+      font-family: var(--font-mono);
+      font-size: clamp(0.45rem, 0.7vw, 0.65rem);
+      line-height: 1.8;
+      color: rgba(239, 68, 68, 0.18);
+      text-decoration: line-through;
+      white-space: nowrap;
     }
 
     /* ===== MAIN CONTENT OVERLAY ===== */
@@ -316,7 +350,7 @@
     }
 
     .panel-box {
-      background: rgba(0, 0, 0, 0.88);
+      background: #000;
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 0 6px 6px 0;
       padding: 2rem 2.5rem;
@@ -426,7 +460,7 @@
     /* ===== METRICS SIDEBAR ===== */
     .metrics-sidebar {
       width: 80px;
-      background: rgba(0, 0, 0, 0.7);
+      background: #000;
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-right: none;
       border-radius: 6px 0 0 6px;
@@ -701,6 +735,24 @@
       opacity: 1;
     }
 
+    .footer-links a.glow-pulse {
+      opacity: 1;
+      animation: link-glow-pulse 2s ease-in-out infinite;
+    }
+
+    .footer-links a.glow-pulse .footer-label {
+      color: rgba(249, 115, 22, 0.7);
+    }
+
+    @keyframes link-glow-pulse {
+      0%, 100% {
+        text-shadow: 0 0 8px rgba(249, 115, 22, 0.6), 0 0 16px rgba(249, 115, 22, 0.3);
+      }
+      50% {
+        text-shadow: 0 0 12px rgba(249, 115, 22, 0.9), 0 0 24px rgba(249, 115, 22, 0.5), 0 0 32px rgba(249, 115, 22, 0.25);
+      }
+    }
+
     .footer-divider {
       color: rgba(255, 255, 255, 0.2);
       font-size: 0.75rem;
@@ -760,6 +812,12 @@
   <div class="ordered-chaos" id="ordered-chaos">
     <div class="ordered-chaos-title">Tolerated Chaos</div>
     <div class="ordered-chaos-list" id="ordered-chaos-list"></div>
+  </div>
+
+  <!-- Removed chaos background (appears after stewardship) -->
+  <div class="removed-chaos" id="removed-chaos">
+    <div class="removed-chaos-title">Removed Chaos</div>
+    <div class="removed-chaos-grid" id="removed-chaos-grid"></div>
   </div>
 
   <!-- Main content panel -->
@@ -935,9 +993,9 @@
         </div>
 
         <div class="footer-links">
-          <a href="https://boringops.run"><span class="footer-label">consulting</span> boringops.run</a>
+          <a href="https://boringops.run" class="glow-pulse"><span class="footer-label">consulting</span> boringops.run</a>
           <span class="footer-divider">·</span>
-          <a href="https://boringops.sh"><span class="footer-label">philosophy</span> boringops.sh</a>
+          <a href="https://boringops.sh" class="glow-pulse"><span class="footer-label">philosophy</span> boringops.sh</a>
         </div>
       </div>
 
@@ -1512,6 +1570,9 @@ var chaosItems = [
               var sidebar = document.getElementById('metrics-sidebar');
               sidebar.style.transition = 'none';
 
+              // Hide original chaos grid
+              grid.classList.remove('visible');
+
               // Now reveal everything at once
               showPhase(3);
               setCardState('final');
@@ -1531,6 +1592,34 @@ var chaosItems = [
 
         setTimeout(removeBatch, 300);
       });
+
+      // Show removed chaos items in background
+      function showRemovedChaos() {
+        var removedChaos = document.getElementById('removed-chaos');
+        var removedGrid = document.getElementById('removed-chaos-grid');
+
+        // Get unique removed items (dedupe by text)
+        var uniqueRemoved = [];
+        var seenTexts = {};
+        notTolerableWords.forEach(function(el) {
+          var text = el.textContent.replace(/·$/, '').trim();
+          if (!seenTexts[text]) {
+            seenTexts[text] = true;
+            uniqueRemoved.push(text);
+          }
+        });
+
+        // Populate the grid
+        uniqueRemoved.forEach(function(text) {
+          var item = document.createElement('span');
+          item.className = 'removed-chaos-item';
+          item.textContent = text;
+          removedGrid.appendChild(item);
+        });
+
+        // Show the container
+        removedChaos.classList.add('visible');
+      }
 
       // Organize kept chaos into numbered list
       function organizeKeptChaos() {
@@ -1602,9 +1691,19 @@ var chaosItems = [
               textSpan.textContent = item.text;
               slot.style.opacity = '1';
               el.style.display = 'none';
+
+              // Show removed chaos after last item completes
+              if (idx === uniqueKept.length - 1) {
+                setTimeout(showRemovedChaos, 300);
+              }
             }, 800);
           }, idx * 120);
         });
+
+        // If no kept items, show removed chaos immediately
+        if (uniqueKept.length === 0) {
+          showRemovedChaos();
+        }
       }
 
     })();
